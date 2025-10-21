@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Minha Variável</title>
+  <link rel="manifest" href="?path=manifest.json">
+  <link rel="icon" href="https://i.imgur.com/7ZQ2WzT.png">
+  <meta name="theme-color" content="#007bff">
+  <style>
+    body, html { margin:0; padding:0; font-family:'Segoe UI', sans-serif; background:#f0f2f5; }
+    #splash {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:#007bff; color:white; display:flex; flex-direction:column;
+      align-items:center; justify-content:center; z-index:10;
+    }
+    #splash img { width:100px; margin-bottom:20px; animation:spin 2s linear infinite; }
+    @keyframes spin { from {transform:rotate(0deg);} to {transform:rotate(360deg);} }
+    #app { display:none; padding:30px; text-align:center; }
+    input, button { padding:10px; font-size:16px; margin:5px; border-radius:8px; border:1px solid #ccc; }
+    button { background:#007bff; color:white; cursor:pointer; transition:.2s; }
+    button:hover { background:#0056b3; }
+    .resultado { margin-top:25px; padding:20px; background:#fff; border-radius:10px; width:320px; margin:auto; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    h3 { color:#007bff; margin-bottom:10px; }
+    p { font-size:15px; margin:4px 0; }
+  </style>
+</head>
+<body>
+
+<div id="splash">
+  <img src="https://i.imgur.com/7ZQ2WzT.png" alt="Logo MV">
+  <h1>Minha Variável</h1>
+</div>
+
+<div id="app">
+  <img src="https://i.imgur.com/7ZQ2WzT.png" width="100" alt="Logo MV"><br>
+  <h2>Minha Variável</h2>
+  <input type="text" id="matricula" placeholder="Digite sua matrícula">
+  <button onclick="consultar()">Buscar</button>
+  <div class="resultado" id="resultado"></div>
+</div>
+
+<script>
+  // Splash screen
+  setTimeout(() => {
+    document.getElementById('splash').style.display='none';
+    document.getElementById('app').style.display='block';
+  }, 1500);
+
+  // Service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('?path=service-worker.js')
+      .then(()=>console.log('SW registrado'))
+      .catch(err=>console.log('Erro SW:',err));
+  }
+
+  function consultar() {
+    const matricula = document.getElementById('matricula').value.trim();
+    const resultadoDiv = document.getElementById('resultado');
+    if(!matricula){ resultadoDiv.innerHTML="<p>Digite sua matrícula.</p>"; return; }
+
+    resultadoDiv.innerHTML="Buscando...";
+
+    google.script.run.withSuccessHandler(function(dados){
+      if(dados){
+        resultadoDiv.innerHTML=`
+          <h3>${dados.nome}</h3>
+          <p><b>Entregue:</b> ${dados.entregue}</p>
+          <p><b>Devolvido:</b> ${dados.devolvido}</p>
+          <p><b>Variável:</b> R$ ${Number(dados.variavel).toLocaleString('pt-BR',{minimumFractionDigits:2})}</p>
+        `;
+      } else {
+        resultadoDiv.innerHTML="<p style='color:red'>Matrícula não encontrada.</p>";
+      }
+    }).buscarMotorista(matricula);
+  }
+</script>
+
+</body>
+</html>
